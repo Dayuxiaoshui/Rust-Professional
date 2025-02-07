@@ -1,9 +1,3 @@
-/*
-	single linked list merge
-	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
-*/
-
-
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
@@ -69,51 +63,15 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a: LinkedList<T>, list_b: LinkedList<T>) -> Self
-where
-    T: Ord, // 确保元素可比较，以保持顺序。
-{
-    let mut merged_list = LinkedList::<T>::new();
-    let mut ptr_a = list_a.start;
-    let mut ptr_b = list_b.start;
-
-    // 合并两个链表
-    while ptr_a.is_some() && ptr_b.is_some() {
-        unsafe {
-            let node_a = ptr_a.unwrap().as_ref();
-            let node_b = ptr_b.unwrap().as_ref();
-
-            if node_a.val <= node_b.val {
-                merged_list.add(node_a.val.clone());
-                ptr_a = node_a.next;
-            } else {
-                merged_list.add(node_b.val.clone());
-                ptr_b = node_b.next;
-            }
+	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+	{
+		//TODO
+		Self {
+            length: 0,
+            start: None,
+            end: None,
         }
-    }
-
-    // 如果 list_a 还有剩余节点，添加到合并链表
-    while ptr_a.is_some() {
-        unsafe {
-            let node_a = ptr_a.unwrap().as_ref();
-            merged_list.add(node_a.val.clone());
-            ptr_a = node_a.next;
-        }
-    }
-
-    // 如果 list_b 还有剩余节点，添加到合并链表
-    while ptr_b.is_some() {
-        unsafe {
-            let node_b = ptr_b.unwrap().as_ref();
-            merged_list.add(node_b.val.clone());
-            ptr_b = node_b.next;
-        }
-    }
-
-    merged_list
-}
-
+	}
 }
 
 impl<T> Display for LinkedList<T>
