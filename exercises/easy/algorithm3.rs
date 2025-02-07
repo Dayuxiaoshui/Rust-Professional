@@ -5,8 +5,21 @@
 */
 
 
-fn sort<T>(array: &mut [T]){
-	//TODO
+fn sort<T>(array: &mut [T])
+where
+    T: Ord, // 确保元素类型可以进行比较
+{
+    let mut n = array.len();
+    while n > 1 {
+        let mut new_n = 0;
+        for i in 1..n {
+            if array[i - 1] > array[i] {
+                array.swap(i - 1, i); // 交换相邻的元素
+                new_n = i;
+            }
+        }
+        n = new_n; // 更新下一次需要检查的长度
+    }
 }
 #[cfg(test)]
 mod tests {

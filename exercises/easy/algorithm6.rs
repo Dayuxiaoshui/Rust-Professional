@@ -4,7 +4,7 @@
 */
 
 
-use std::collections::HashSet;
+use std::collections::{HashSet};
 
 struct Graph {
     adj: Vec<Vec<usize>>, 
@@ -23,13 +23,20 @@ impl Graph {
     }
 
     fn dfs_util(&self, v: usize, visited: &mut HashSet<usize>, visit_order: &mut Vec<usize>) {
-        //TODO
+        visited.insert(v);       // Mark current node as visited
+        visit_order.push(v);     // Add current node to visit_order
+        
+        for &neighbor in &self.adj[v] {
+            if !visited.contains(&neighbor) {
+                self.dfs_util(neighbor, visited, visit_order); // Recur for all unvisited neighbors
+            }
+        }
     }
 
     // Perform a depth-first search on the graph, return the order of visited nodes
     fn dfs(&self, start: usize) -> Vec<usize> {
-        let mut visited = HashSet::new();
-        let mut visit_order = Vec::new(); 
+        let mut visited = HashSet::new();  // Keeps track of visited nodes
+        let mut visit_order = Vec::new();  // Stores the order of visited nodes
         self.dfs_util(start, &mut visited, &mut visit_order);
         visit_order
     }
@@ -75,4 +82,3 @@ mod tests {
         assert_eq!(visit_order_disconnected, vec![3, 4]); 
     }
 }
-
