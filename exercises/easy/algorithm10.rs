@@ -1,193 +1,99 @@
-/*
-	graph
-	This problem requires you to implement a basic graph functio
-*/
-
-
-use std::cmp::Ord;
-use std::default::Default;
-
-pub struct Heap<T>
-where
-    T: Default,
-{
-    count: usize,
-    items: Vec<T>,
-    comparator: fn(&T, &T) -> bool,
+use std::collections::{HashMap, HashSet};
+use std::fmt;
+#[derive(Debug, Clone)]
+pub struct NodeNotInGraph;
+impl fmt::Display for NodeNotInGraph {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "accessing a node that is not in the graph")
+    }
 }
-
-impl<T> Heap<T>
-where
-    T: Default,
-{
-    pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
-        Self {
-            count: 0,
-            items: vec![T::default()], // First element is a placeholder for 1-based indexing
-            comparator,
+pub struct UndirectedGraph {
+    adjacency_table: HashMap<String, Vec<(String, i32)>>,
+}
+impl Graph for UndirectedGraph {
+    fn new() -> UndirectedGraph {
+        UndirectedGraph {
+            adjacency_table: HashMap::new(),
         }
     }
-
-    pub fn len(&self) -> usize {
-        self.count
+    fn adjacency_table_mutable(&mut self) -> &mut HashMap<String, Vec<(String, i32)>> {
+        &mut self.adjacency_table
     }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
+    fn adjacency_table(&self) -> &HashMap<String, Vec<(String, i32)>> {
+        &self.adjacency_table
     }
+    fn add_edge(&mut self, edge: (&str, &str, i32)) {
+        //TODO
+        let (node1, node2, weight) = edge;
 
-    pub fn add(&mut self, value: T) {
-        self.items.push(value);
-        self.count += 1;
-        self.bubble_up(self.count);
+        // Add node1 to the graph if it doesn't exist
+        self.add_node(node1);
+        // Add node2 to the graph if it doesn't exist
+        self.add_node(node2);
+
+        // Add the edge from node1 to node2
+        self.adjacency_table_mutable()
+            .entry(node1.to_string())
+            .or_insert_with(Vec::new)
+            .push((node2.to_string(), weight));
+
+        // Add the edge from node2 to node1
+        self.adjacency_table_mutable()
+            .entry(node2.to_string())
+            .or_insert_with(Vec::new)
+            .push((node1.to_string(), weight));
     }
-
-    fn parent_idx(&self, idx: usize) -> usize {
-        idx / 2
+}
+pub trait Graph {
+    fn new() -> Self;
+    fn adjacency_table_mutable(&mut self) -> &mut HashMap<String, Vec<(String, i32)>>;
+    fn adjacency_table(&self) -> &HashMap<String, Vec<(String, i32)>>;
+    fn add_node(&mut self, node: &str) -> bool {
+        //TODO
+        self.adjacency_table_mutable()
+            .entry(node.to_string())
+            .or_insert_with(Vec::new);
+        true
     }
-
-    fn children_present(&self, idx: usize) -> bool {
-        self.left_child_idx(idx) <= self.count
+    fn add_edge(&mut self, edge: (&str, &str, i32)) {
+        //TODO
     }
-
-    fn left_child_idx(&self, idx: usize) -> usize {
-        idx * 2
+    fn contains(&self, node: &str) -> bool {
+        self.adjacency_table().get(node).is_some()
     }
-
-    fn right_child_idx(&self, idx: usize) -> usize {
-        self.left_child_idx(idx) + 1
+    fn nodes(&self) -> HashSet<&String> {
+        self.adjacency_table().keys().collect()
     }
-
-    fn smallest_child_idx(&self, idx: usize) -> usize {
-        let left = self.left_child_idx(idx);
-        let right = self.right_child_idx(idx);
-
-        if right <= self.count && (self.comparator)(&self.items[right], &self.items[left]) {
-            right
-        } else {
-            left
-        }
-    }
-
-    fn bubble_up(&mut self, idx: usize) {
-        let mut idx = idx;
-        while idx > 1 && (self.comparator)(&self.items[idx], &self.items[self.parent_idx(idx)]) {
-            self.items.swap(idx, self.parent_idx(idx));
-            idx = self.parent_idx(idx);
-        }
-    }
-
-    fn bubble_down(&mut self, idx: usize) {
-        let mut idx = idx;
-        while self.children_present(idx) {
-            let smallest_child = self.smallest_child_idx(idx);
-            if (self.comparator)(&self.items[smallest_child], &self.items[idx]) {
-                self.items.swap(idx, smallest_child);
-                idx = smallest_child;
-            } else {
-                break;
+    fn edges(&self) -> Vec<(&String, &String, i32)> {
+        let mut edges = Vec::new();
+        for (from_node, from_node_neighbours) in self.adjacency_table() {
+            for (to_node, weight) in from_node_neighbours {
+                edges.push((from_node, to_node, *weight));
             }
         }
-    }
-
-    pub fn pop(&mut self) -> Option<T> {
-        if self.is_empty() {
-            return None;
-        }
-        self.items.swap(1, self.count);
-        self.count -= 1;
-        self.bubble_down(1);
-        self.items.pop()
+        edges
     }
 }
-
-impl<T> Heap<T>
-where
-    T: Default + Ord,
-{
-    /// Create a new MinHeap
-    pub fn new_min() -> Self {
-        Self::new(|a, b| a < b)
-    }
-
-    /// Create a new MaxHeap
-    pub fn new_max() -> Self {
-        Self::new(|a, b| a > b)
-    }
-}
-
-impl<T> Iterator for Heap<T>
-where
-    T: Default,
-{
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        self.pop()
-    }
-}
-
-pub struct MinHeap;
-
-impl MinHeap {
-    #[allow(clippy::new_ret_no_self)]
-    pub fn new<T>() -> Heap<T>
-    where
-        T: Default + Ord,
-    {
-        Heap::new(|a, b| a < b)
-    }
-}
-
-pub struct MaxHeap;
-
-impl MaxHeap {
-    #[allow(clippy::new_ret_no_self)]
-    pub fn new<T>() -> Heap<T>
-    where
-        T: Default + Ord,
-    {
-        Heap::new(|a, b| a > b)
-    }
-}
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
+mod test_undirected_graph {
+    use super::Graph;
+    use super::UndirectedGraph;
     #[test]
-    fn test_empty_heap() {
-        let mut heap = MaxHeap::new::<i32>();
-        assert_eq!(heap.next(), None);
-    }
-
-    #[test]
-    fn test_min_heap() {
-        let mut heap = MinHeap::new();
-        heap.add(4);
-        heap.add(2);
-        heap.add(9);
-        heap.add(11);
-        assert_eq!(heap.len(), 4);
-        assert_eq!(heap.next(), Some(2));
-        assert_eq!(heap.next(), Some(4));
-        assert_eq!(heap.next(), Some(9));
-        heap.add(1);
-        assert_eq!(heap.next(), Some(1));
-    }
-
-    #[test]
-    fn test_max_heap() {
-        let mut heap = MaxHeap::new();
-        heap.add(4);
-        heap.add(2);
-        heap.add(9);
-        heap.add(11);
-        assert_eq!(heap.len(), 4);
-        assert_eq!(heap.next(), Some(11));
-        assert_eq!(heap.next(), Some(9));
-        assert_eq!(heap.next(), Some(4));
-        heap.add(1);
-        assert_eq!(heap.next(), Some(2));
+    fn test_add_edge() {
+        let mut graph = UndirectedGraph::new();
+        graph.add_edge(("a", "b", 5));
+        graph.add_edge(("b", "c", 10));
+        graph.add_edge(("c", "a", 7));
+        let expected_edges = [
+            (&String::from("a"), &String::from("b"), 5),
+            (&String::from("b"), &String::from("a"), 5),
+            (&String::from("c"), &String::from("a"), 7),
+            (&String::from("a"), &String::from("c"), 7),
+            (&String::from("b"), &String::from("c"), 10),
+            (&String::from("c"), &String::from("b"), 10),
+        ];
+        for edge in expected_edges.iter() {
+            assert_eq!(graph.edges().contains(edge), true);
+        }
     }
 }

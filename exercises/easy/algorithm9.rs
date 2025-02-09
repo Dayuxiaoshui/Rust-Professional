@@ -23,7 +23,7 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()], // First element is a placeholder for 1-based indexing
+            items: vec![T::default()],
             comparator,
         }
     }
@@ -37,9 +37,19 @@ where
     }
 
     pub fn add(&mut self, value: T) {
+        //TODO
         self.items.push(value);
         self.count += 1;
-        self.bubble_up(self.count);
+        self.switch(self.count);
+    }
+
+    fn switch(&mut self, idx: usize) {
+        let mut idx = idx;
+        while idx > 1 && (self.comparator)(&self.items[idx], &self.items[self.parent_idx(idx)]) {
+            let parent_index = self.parent_idx(idx);
+            self.items.swap(idx, parent_index);
+            idx = self.parent_idx(idx);
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -59,6 +69,7 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
+        //TODO
         let left = self.left_child_idx(idx);
         let right = self.right_child_idx(idx);
 
@@ -69,15 +80,7 @@ where
         }
     }
 
-    fn bubble_up(&mut self, idx: usize) {
-        let mut idx = idx;
-        while idx > 1 && (self.comparator)(&self.items[idx], &self.items[self.parent_idx(idx)]) {
-            self.items.swap(idx, self.parent_idx(idx));
-            idx = self.parent_idx(idx);
-        }
-    }
-
-    fn bubble_down(&mut self, idx: usize) {
+    fn re_switch(&mut self, idx: usize) {
         let mut idx = idx;
         while self.children_present(idx) {
             let smallest_child = self.smallest_child_idx(idx);
@@ -96,7 +99,7 @@ where
         }
         self.items.swap(1, self.count);
         self.count -= 1;
-        self.bubble_down(1);
+        self.re_switch(1);
         self.items.pop()
     }
 }
@@ -123,6 +126,7 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
+        //TODO
         self.pop()
     }
 }
@@ -154,7 +158,6 @@ impl MaxHeap {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn test_empty_heap() {
         let mut heap = MaxHeap::new::<i32>();
